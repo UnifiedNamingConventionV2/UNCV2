@@ -998,6 +998,8 @@ test("request", { "http.request", "http_request" }, function()
     local data = game:GetService("HttpService"):JSONDecode(response.Body)
     assert(type(data) == "table" and type(data["user-agent"]) == "string",
         "request did not return a table with a user-agent key")
+    assert(data["roblox-game-id"] == tostring(game.JobId), "request did not return the correct game id")
+    assert(data["roblox-session-id"] == tostring(game.JobId), "request did not return the correct session id")
     return "User-Agent: " .. data["user-agent"]
 end, request)
 
