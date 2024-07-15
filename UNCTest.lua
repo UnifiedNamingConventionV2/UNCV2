@@ -1200,5 +1200,3 @@ test("WebSocket.disconnect", {}, function()
     assert(not pcall(function() WebSocket:Close(ws) end),
         "WebSocket:Close() should throw a error if already disconnected")
 end, WebSocket.disconnect)
-
-getgenv().ws = nil
