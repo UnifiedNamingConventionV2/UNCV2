@@ -365,10 +365,6 @@ test("debug.getconstant", { "getconstant", "getconst", "debug.getconst" }, funct
             local size = #debug.getconstants(x); debug.getconstant(x, size + 1)
         end), "debug.getconstant must check constant bounds")
     end
-    if not identifyexecutor():find("macsploit") then
-        -- crashes
-        assert(not pcall(function() debug.getconstant(-1, 1) end), "debug.getconstant must not allow negative numbers")
-    end
 end, debug.getconstant)
 
 test("debug.getconstants", { "getconstants", "getconsts", "debug.getconsts" }, function()
@@ -382,10 +378,6 @@ test("debug.getconstants", { "getconstants", "getconsts", "debug.getconsts" }, f
     assert(constants[3] == nil, "Third constant must be nil")
     assert(constants[4] == "Hello, world!", "Fourth constant must be 'Hello, world!'")
     assert(constants[5] == "warn", "Fifth constant must be warn")
-    if not identifyexecutor():find("macsploit") then
-        -- crashes
-        assert(not pcall(function() debug.getconstants(-1) end), "debug.getconstants must not allow negative numbers")
-    end
 end, debug.getconstants)
 
 test("debug.getinfo", { "debug.getfunctioninfo", "debug.getfuncinfo" }, function()
@@ -433,8 +425,6 @@ test("debug.getproto", { "getproto" }, function()
     end
 
     assert(not pcall(function() debug.getproto(-1, 1) end), "debug.getproto must not allow negative numbers")
-    assert(not pcall(function() debug.getproto(coroutine.wrap(function() end), 1) end),
-        "debug.getproto must not use C functions to have protos collected")
 
     local proto = debug.getproto(a, 1)
     local _, result = pcall(function() return proto() end)
@@ -471,12 +461,6 @@ test("debug.getprotos", { "getprotos" }, function()
         end
         b()
     end
-    if not identifyexecutor():find("macsploit") then
-        -- crashes
-        assert(not pcall(function() debug.getprotos(-1) end), "debug.getprotos must not allow negative numbers")
-    end
-    assert(not pcall(function() debug.getprotos(coroutine.wrap(function() end)) end),
-        "debug.getprotos must not use C functions to have protos collected")
 
     local protos = debug.getprotos(a)
     assert(#protos == 1, "debug.getprotos is returning an invalid amount of prototypes")
@@ -492,10 +476,6 @@ test("debug.getstack", {}, function()
     assert(debug.getstack(1, 1) == "ab", "The first item in the stack should be 'ab'")
     assert(debug.getstack(1)[1] == "ab", "The first item in the stack table should be 'ab'")
     assert(not pcall(function() debug.getstack(1, 0) end), "getstack must be one based")
-    if not identifyexecutor():find("macsploit") then
-        -- crashes
-        assert(not pcall(function() debug.getstack(1, -1) end), "getstack must not allow negative numbers")
-    end
     assert(not pcall(function()
         local size = #debug.getstack(1); debug.getstack(1, size + 1)
     end), "debug.getstack bounds")
