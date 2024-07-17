@@ -701,9 +701,25 @@ test("mousescroll", {}, nil, mousescroll)
 
 -- Instances
 
--- test("firesignal", {}, function() 
---     -- soon :D
--- end)
+test("firesignal", {}, function()
+    -- i had no other ideas ok :C
+    -- ignore if lame test
+    local a, b, signaled = Instance.new("Folder", game:GetService("Players").LocalPlayer.PlayerGui), Instance.new("Folder", game:GetService("Players").LocalPlayer.PlayerGui.UNC), false
+    a.Name = "UNC"
+    b.Name = "access"
+
+    local c = game.DescendantAdded:Connect(function(...)
+        if (...):IsDescendantOf(game:GetService("Players").LocalPlayer.PlayerGui.UNC) then
+            signaled = true
+            return;
+        end
+    end)
+
+    local a = game.DescendantAdded
+    firesignal(a, game.Players.LocalPlayer.PlayerGui.UNC.access)
+    c:Disconnect()
+    assert(signaled, "firesignal did not fire the signal");
+end)
 
 test("fireclickdetector", {}, function()
     local done = false
@@ -734,6 +750,10 @@ test("firetouchinterest", {}, function()
     assert(number == 1, "firetouchinterest should only activate the TouchTransmitter callback once")
     game:GetService("Workspace").Part:Destroy()
 end, firetouchinterest)
+
+test("fireproximityprompt", {}, function()
+    
+end, fireproximityprompt)
 
 test("getcallbackvalue", {}, function()
     local bindable = Instance.new("BindableFunction")
@@ -1016,6 +1036,7 @@ test("getgc", { "getgarbagecollector" }, function()
     local gc = getgc()
     assert(type(gc) == "table", "getgc did not return a table")
     assert(#gc ~= 0, "getgc did not return a table with any values")
+    assert(getgc ~= debug.getregistry, "debug.getgc should not be the same as getregistry")
 end, getgc)
 
 test("getgenv", {}, function()
@@ -1163,22 +1184,23 @@ test("WebSocket.connect", {}, function()
         OnMessage = { "table", "userdata" },
         OnClose = { "table", "userdata" },
     }
-    getgenv().ws = WebSocket.connect("ws://echo.websocket.events")
-    assert(type(ws) == "table" or type(ws) == "userdata", "WebSocket.connect did not return a table or userdata")
+    getgenv().wsc = WebSocket.connect("ws://echo.websocket.events")
+    assert(type(wsc) == "table" or type(wsc) == "userdata", "WebSocket.connect did not return a table or userdata")
     for k, v in pairs(types) do
         if type(v) == "table" then
-            assert(table.find(v, type(ws[k])),
+            assert(table.find(v, type(wsc[k])),
                 "WebSocket.connect did not return a " ..
-                table.concat(v, ", ") .. " for " .. k .. " (a " .. type(ws[k]) .. ")")
+                table.concat(v, ", ") .. " for " .. k .. " (a " .. type(wsc[k]) .. ")")
         else
-            assert(type(ws[k]) == v,
-                "WebSocket.connect did not return a " .. v .. " for " .. k .. " (a " .. type(ws[k]) .. ")")
+            assert(type(wsc[k]) == v,
+                "WebSocket.connect did not return a " .. v .. " for " .. k .. " (a " .. type(wsc[k]) .. ")")
         end
     end
 end, WebSocket.connect)
 
 test("WebSocket.disconnect", {}, function()
-    WebSocket.disconnect(ws)
-    assert(not pcall(function() WebSocket:Close(ws) end),
+    WebSocket.disconnect(wsc)
+    assert(not pcall(function() WebSocket:Close(wsc) end),
         "WebSocket:Close() should throw a error if already disconnected")
 end, WebSocket.disconnect)
+getgenv().wsc = nil
