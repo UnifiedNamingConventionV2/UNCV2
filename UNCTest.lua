@@ -722,7 +722,7 @@ test("getnamecallmethod", { "getncm", "get_namecall_method"}, function()
     end)
 
     assert(getnamecallmethod() == "NAMECALL_METHODS_ARE_IMPORTANT", "getnamecallmethod did not return the real namecall method")
-end)
+end, getnamecallmethod)
 
 test("setnamecallmethod", { "setncm", "set_namecall_method"}, function()
     assert(getrawmetatable, "setnamecallmethod cannot be tested due to getrawmetatable not existing")
@@ -738,7 +738,7 @@ test("setnamecallmethod", { "setncm", "set_namecall_method"}, function()
     local success, error = pcall(getrawmetatable(game).__namecall, game, "Workspace")
 
     assert(success, "setnamecallmethod changed the method visible to getnamecallmethod, but __namecall cannot be used due to " .. error)
-end)
+end, setnamecallmethod)
 
 test("firesignal", {}, function()
     local event = Instance.new("BindableEvent")
@@ -892,20 +892,6 @@ test("hookmetamethod", {}, function()
     assert(ref() == false, "hookmetamethod did not return the original function")
 end, hookmetamethod)
 
-test("getnamecallmethod", {}, function()
-    local method
-    local ref
-    ref = hookmetamethod(game, "__namecall", function(...)
-        if not method then
-            method = getnamecallmethod()
-        end
-        return ref(...)
-    end)
-    game:GetService("Lighting")
-    assert(method == "GetService", "getnamecallmethod did not get the correct method (GetService)")
-    assert(not pcall(getnamecallmethod), "getnamecallmethod should only be used in a hookmetamethod function")
-end, getnamecallmethod)
-
 test("isreadonly", {}, function()
     local object = {}
     table.freeze(object)
@@ -1039,6 +1025,10 @@ test("request", { "http.request", "http_request" }, function()
     assert(data["roblox-session-id"] == tostring(game.JobId), "request did not return the correct session id")
     return "User-Agent: " .. data["user-agent"]
 end, request)
+
+test("gethwid", { "get_hwid" }, function()
+	assert(typeof(gethwid()) == "string", "gethwid does not return a valid string")
+end, gethwid)
 
 test("setclipboard", { "setrbxclipboard", "toclipboard" }, function()
     setclipboard("UNC v2 clipboard test")
