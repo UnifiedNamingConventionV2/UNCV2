@@ -589,16 +589,22 @@ test("fs.listfiles", { "listfiles" }, function()
     fs.makefolder(".tests/listfiles")
     fs.writefile(".tests/listfiles/test_1.txt", "success")
     fs.writefile(".tests/listfiles/test_2.txt", "success")
+        
     local files = fs.listfiles(".tests/listfiles")
     assert(#files == 2, "fs.listfiles did not return the correct number of files")
     assert(fs.isfile(files[1]), "fs.listfiles did not return a file path")
     assert(fs.readfile(files[1]) == "success", "fs.listfiles did not return the correct files")
+        
     fs.makefolder(".tests/listfiles_2")
     fs.makefolder(".tests/listfiles_2/test_1")
     fs.makefolder(".tests/listfiles_2/test_2")
     local folders = fs.listfiles(".tests/listfiles_2")
     assert(#folders == 2, "fs.listfiles did not return the correct number of folders")
     assert(fs.isfolder(folders[1]), "fs.listfiles did not return a folder path")
+
+    local success, files = pcall(fs.listfiles, "C:/")
+
+    assert(not (success and #files > 0), "fs can be used to access any directory")
 end, fs.listfiles)
 
 test("fs.writefile", { "writefile" }, function()
@@ -608,6 +614,15 @@ test("fs.writefile", { "writefile" }, function()
         fs.writefile(".tests/writefile", "success")
         assert(fs.isfile(".tests/writefile.txt"))
     end)
+        
+    local tryWriteExe = pcall(fs.writefile, ".tests/maliciousfile.exe", "")
+    local tryBypassExe = pcall(fs.writefile, ".tests/maliciousfile.eXe", "")
+    local tryDirTraversal = pcall(fs.writefile, ".tests/../../UNC2.txt", "If you see this, it means your executor allows directory traversal via ../")
+
+    assert(not tryWriteExe, "fs.writefile allows exe files to be written or does not throw an error")
+    assert(not tryBypassExe, "fs.writefile blocks certain file types, but it can be bypassed")
+    assert(not tryDirTraversal, "fs.writefile blocks certain file types, but it can be bypassed")
+    
     if not requiresFileExt then
         return "This executor requires a file extension in writefile"
     end
@@ -701,24 +716,46 @@ test("mousescroll", {}, nil, mousescroll)
 
 -- Instances
 
-test("firesignal", {}, function()
-    -- i had no other ideas ok :C
-    -- ignore if lame test
-    local a, b, signaled = Instance.new("Folder", game:GetService("Players").LocalPlayer.PlayerGui), Instance.new("Folder", game:GetService("Players").LocalPlayer.PlayerGui.UNC), false
-    a.Name = "UNC"
-    b.Name = "access"
-
-    local c = game.DescendantAdded:Connect(function(...)
-        if (...):IsDescendantOf(game:GetService("Players").LocalPlayer.PlayerGui.UNC) then
-            signaled = true
-            return;
-        end
+test("getnamecallmethod", { "getncm", "get_namecall_method"}, function()
+    pcall(function()
+        game:NAMECALL_METHODS_ARE_IMPORTANT()
     end)
 
-    local a = game.DescendantAdded
-    firesignal(a, game.Players.LocalPlayer.PlayerGui.UNC.access)
-    c:Disconnect()
-    assert(signaled, "firesignal did not fire the signal");
+    assert(getnamecallmethod() == "NAMECALL_METHODS_ARE_IMPORTANT", "getnamecallmethod did not return the real namecall method")
+end, getnamecallmethod)
+
+test("setnamecallmethod", { "setncm", "set_namecall_method"}, function()
+    assert(getrawmetatable, "setnamecallmethod cannot be tested due to getrawmetatable not existing")
+    
+    pcall(function()
+        game:THIS_METHOD_IS_FALSE()
+    end)
+
+    assert(getnamecallmethod() == "THIS_METHOD_IS_FALSE", "setnamecallmethod did not return the real namecall method")
+
+    setnamecallmethod("GetService")
+
+    local success, error = pcall(getrawmetatable(game).__namecall, game, "Workspace")
+
+    assert(success, "setnamecallmethod changed the method visible to getnamecallmethod, but __namecall cannot be used due to " .. error)
+end, setnamecallmethod)
+
+test("firesignal", {}, function()
+    local event = Instance.new("BindableEvent")
+    local signal, connection = event.Event, nil
+    local result = false
+    
+    connection = signal:Connect(function(arg)
+        result = arg
+        connection:Disconnect()
+    end)
+    
+    firesignal(signal, true)
+        
+    -- Some executors use getconnections as a stand-in for firesignal, but they forget to pass args
+    assert(typeof(result) == "boolean", "firesignal failed to pass arguments")
+    -- Firesignal should yield until the signal has been fired
+    assert(result, "firesignal failed to fire the signal")
 end)
 
 test("fireclickdetector", {}, function()
@@ -855,20 +892,6 @@ test("hookmetamethod", {}, function()
     assert(ref() == false, "hookmetamethod did not return the original function")
 end, hookmetamethod)
 
-test("getnamecallmethod", {}, function()
-    local method
-    local ref
-    ref = hookmetamethod(game, "__namecall", function(...)
-        if not method then
-            method = getnamecallmethod()
-        end
-        return ref(...)
-    end)
-    game:GetService("Lighting")
-    assert(method == "GetService", "getnamecallmethod did not get the correct method (GetService)")
-    assert(not pcall(getnamecallmethod), "getnamecallmethod should only be used in a hookmetamethod function")
-end, getnamecallmethod)
-
 test("isreadonly", {}, function()
     local object = {}
     table.freeze(object)
@@ -1002,6 +1025,10 @@ test("request", { "http.request", "http_request" }, function()
     assert(data["roblox-session-id"] == tostring(game.JobId), "request did not return the correct session id")
     return "User-Agent: " .. data["user-agent"]
 end, request)
+
+test("gethwid", { "get_hwid" }, function()
+	assert(typeof(gethwid()) == "string", "gethwid does not return a valid string")
+end, gethwid)
 
 test("setclipboard", { "setrbxclipboard", "toclipboard" }, function()
     setclipboard("UNC v2 clipboard test")
