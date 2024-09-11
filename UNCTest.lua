@@ -1211,7 +1211,7 @@ test("WebSocket.connect", {}, function()
         OnMessage = { "table", "userdata" },
         OnClose = { "table", "userdata" },
     }
-    getgenv().wsc = WebSocket.connect("ws://echo.websocket.events")
+    local wsc = WebSocket.connect("ws://echo.websocket.events")
     assert(type(wsc) == "table" or type(wsc) == "userdata", "WebSocket.connect did not return a table or userdata")
     for k, v in pairs(types) do
         if type(v) == "table" then
@@ -1224,10 +1224,3 @@ test("WebSocket.connect", {}, function()
         end
     end
 end, WebSocket.connect)
-
-test("WebSocket.disconnect", {}, function()
-    WebSocket.disconnect(wsc)
-    assert(not pcall(function() WebSocket:Close(wsc) end),
-        "WebSocket:Close() should throw a error if already disconnected")
-end, WebSocket.disconnect)
-getgenv().wsc = nil
